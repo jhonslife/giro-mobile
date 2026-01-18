@@ -222,17 +222,14 @@ https://expo.dev/artifacts/eas/[BUILD_ID].apk
 ### Instruções de Instalação
 
 1. **Permitir instalação de fontes desconhecidas**
-
    - Vá em Configurações > Segurança
    - Ative "Fontes desconhecidas" ou "Instalar apps desconhecidos"
 
 2. **Baixar o APK**
-
    - Clique no link ou escaneie o QR code
    - Aguarde o download completar
 
 3. **Instalar o app**
-
    - Abra o arquivo APK baixado
    - Clique em "Instalar"
    - Aguarde a instalação
@@ -266,7 +263,7 @@ https://expo.dev/artifacts/eas/[BUILD_ID].apk
 
 Em caso de problemas, entre em contato:
 
-- Email: suporte@giro.app
+- Email: suporte@arkheion-tiktrend.com.br
 - WhatsApp: (XX) XXXXX-XXXX
 ```
 
@@ -381,11 +378,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'giro-mobile/**'
+      - "giro-mobile/**"
   pull_request:
     branches: [main]
     paths:
-      - 'giro-mobile/**'
+      - "giro-mobile/**"
 
 jobs:
   test:
@@ -399,8 +396,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: giro-mobile/package-lock.json
 
       - name: Install dependencies
@@ -433,7 +430,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Setup Expo
         uses: expo/expo-github-action@v8

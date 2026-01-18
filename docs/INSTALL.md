@@ -109,7 +109,7 @@ https://expo.dev/artifacts/eas/[BUILD_ID].apk
 ## 🆘 Suporte
 
 - **Gerente da loja**: Primeiro contato
-- **Suporte GIRO**: suporte@giro.com.br
+- **Suporte GIRO**: suporte@arkheion-tiktrend.com.br
 
 ---
 
