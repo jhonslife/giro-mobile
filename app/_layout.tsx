@@ -13,6 +13,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastProvider } from '@/components/ui/Toast';
 import { useConnectionStore } from '@/stores/connectionStore';
+import { installTokenSync } from '@lib/tokenSync';
 
 import '../global.css';
 
@@ -35,11 +36,15 @@ export default function RootLayout() {
   const connectionState = useConnectionStore((state) => state.connectionState);
 
   useEffect(() => {
+    const unsubscribe = installTokenSync();
+
     // Hide splash screen after initial load
     const hideSplash = async () => {
       await SplashScreen.hideAsync();
     };
     hideSplash();
+
+    return () => unsubscribe && unsubscribe();
   }, []);
 
   return (
