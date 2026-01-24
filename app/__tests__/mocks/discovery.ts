@@ -4,7 +4,7 @@
  */
 
 import type { DiscoveredDesktop } from '@/types/connection';
-import { EventEmitter } from 'events';
+import { EventEmitter } from './event-emitter';
 import { createDiscoveredDesktop } from '../factories';
 
 export class MockZeroconf extends EventEmitter {

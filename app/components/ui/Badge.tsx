@@ -90,7 +90,12 @@ export function StockBadge({ current, minimum, className, ...props }: StockBadge
   }
 
   return (
-    <Badge variant={variant} className={className} {...props}>
+    <Badge
+      variant={variant}
+      className={className}
+      accessibilityLabel={`Estoque: ${label}`}
+      {...props}
+    >
       {label}
     </Badge>
   );
@@ -110,6 +115,8 @@ export function ExpirationBadge({
 }: ExpirationBadgeProps) {
   let days = daysUntil;
 
+  // ... (logic omitted for brevity, keeping original)
+
   // Se passou data, calcula dias restantes
   if (expirationDate) {
     const date = new Date(expirationDate);
@@ -122,19 +129,27 @@ export function ExpirationBadge({
 
   let variant: 'success' | 'warning' | 'error' = 'success';
   let label = `${days}d`;
+  let accessibilityLabel = `Vence em ${days} dias`;
 
   if (days <= 0) {
     variant = 'error';
     label = 'Vencido';
+    accessibilityLabel = 'Produto vencido';
   } else if (days <= 2) {
     variant = 'error';
     label = days === 1 ? 'Amanhã' : `${days}d`;
+    accessibilityLabel = days === 1 ? 'Vence amanhã' : `Vence em ${days} dias`;
   } else if (days <= 7) {
     variant = 'warning';
   }
 
   return (
-    <Badge variant={variant} className={className} {...props}>
+    <Badge
+      variant={variant}
+      className={className}
+      accessibilityLabel={accessibilityLabel}
+      {...props}
+    >
       {label}
     </Badge>
   );

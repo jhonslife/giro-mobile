@@ -11,6 +11,7 @@ import {
   View,
   type ModalProps as RNModalProps,
 } from 'react-native';
+import { useHaptics } from '@hooks/useHaptics';
 import { Button } from './Button';
 
 interface ModalProps extends Omit<RNModalProps, 'children'> {
@@ -32,8 +33,18 @@ export function Modal({
   transparent = true,
   ...props
 }: ModalProps) {
+  const { selection } = useHaptics();
+
   const handleBackdropPress = () => {
     if (closeOnBackdrop && onClose) {
+      selection();
+      onClose();
+    }
+  };
+
+  const handleClose = () => {
+    if (onClose) {
+      selection();
       onClose();
     }
   };
@@ -46,8 +57,15 @@ export function Modal({
       onRequestClose={onClose}
       {...props}
     >
-      <TouchableWithoutFeedback onPress={handleBackdropPress}>
-        <View className="flex-1 justify-center items-center bg-black/50 px-4">
+      <TouchableWithoutFeedback
+        onPress={handleBackdropPress}
+        accessibilityLabel="Fechar modal"
+        accessibilityRole="button"
+      >
+        <View
+          className="flex-1 justify-center items-center bg-black/50 px-4"
+          accessibilityViewIsModal={true}
+        >
           <TouchableWithoutFeedback>
             <View className="bg-background rounded-2xl w-full max-w-sm shadow-xl">
               {/* Header */}
@@ -56,7 +74,7 @@ export function Modal({
                   {title && <Text className="text-lg font-semibold text-foreground">{title}</Text>}
                   {showCloseButton && onClose && (
                     <TouchableOpacity
-                      onPress={onClose}
+                      onPress={handleClose}
                       className="p-1"
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >

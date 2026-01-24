@@ -23,7 +23,12 @@ export function Loading({
 }: LoadingProps) {
   const content = (
     <>
-      <ActivityIndicator size={size} color={color} />
+      <ActivityIndicator
+        size={size}
+        color={color}
+        accessibilityRole="progressbar"
+        accessibilityLabel={text || 'Carregando'}
+      />
       {text && <Text className="text-foreground-secondary mt-3 text-center">{text}</Text>}
     </>
   );
@@ -66,6 +71,8 @@ interface SkeletonProps {
   className?: string;
 }
 
+import { Pulse } from './Animated';
+
 export function Skeleton({
   width = '100%',
   height = 20,
@@ -73,11 +80,11 @@ export function Skeleton({
   className,
 }: SkeletonProps) {
   return (
-    <View
-      className={cn('bg-background-tertiary animate-pulse', className)}
+    <Pulse
+      className={cn('bg-background-tertiary', className)}
       style={{
-        width: width as any,
-        height: height as any,
+        width: width as DimensionValue,
+        height: height as DimensionValue,
         borderRadius,
       }}
     />

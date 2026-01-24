@@ -8,9 +8,10 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import React from 'react';
 import {
   ActivityIndicator,
+  GestureResponderEvent,
+  Pressable,
   Text,
-  TouchableOpacity,
-  type TouchableOpacityProps,
+  type PressableProps,
 } from 'react-native';
 
 const buttonVariants = cva('flex-row items-center justify-center rounded-lg', {
@@ -57,7 +58,7 @@ const textVariants = cva('font-semibold text-center', {
   },
 });
 
-interface ButtonProps extends TouchableOpacityProps, VariantProps<typeof buttonVariants> {
+interface ButtonProps extends PressableProps, VariantProps<typeof buttonVariants> {
   children: React.ReactNode;
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -79,7 +80,7 @@ export function Button({
 }: ButtonProps) {
   const { selection } = useHaptics();
 
-  const handlePress = async (event: any) => {
+  const handlePress = async (event: GestureResponderEvent) => {
     await selection();
     onPress?.(event);
   };
@@ -87,12 +88,22 @@ export function Button({
   const isDisabled = disabled || isLoading;
 
   return (
-    <TouchableOpacity
+    <Pressable
       className={cn(buttonVariants({ variant, size }), isDisabled && 'opacity-50', className)}
-      style={style}
+      style={({ pressed }) => [
+        style,
+        pressed && variant !== 'ghost' && variant !== 'outline' && { opacity: 0.9 },
+        pressed && (variant === 'ghost' || variant === 'outline') && { opacity: 0.7 },
+      ]}
       disabled={isDisabled}
       onPress={handlePress}
-      activeOpacity={0.7}
+      android_ripple={{
+        color: variant === 'default' ? '#ffffff33' : '#0000001a',
+        borderless: false,
+      }}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled, busy: isLoading }}
+      accessibilityLabel={typeof children === 'string' ? children : undefined}
       {...props}
     >
       {isLoading ? (
@@ -111,6 +122,6 @@ export function Button({
           {rightIcon && <>{rightIcon}</>}
         </>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }

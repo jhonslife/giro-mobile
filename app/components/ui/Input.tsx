@@ -55,6 +55,8 @@ export const Input = forwardRef<TextInput, InputProps>(
             )}
             placeholderTextColor="#9ca3af"
             editable={editable}
+            accessibilityLabel={label || props.placeholder}
+            accessibilityRole="none"
             {...props}
           />
 

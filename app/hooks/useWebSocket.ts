@@ -169,6 +169,36 @@ export function useWebSocket(): UseWebSocketResult {
     }
   }, [selectedDesktop, connect, token, setConnectionState]);
 
+  const syncProducts = useCallback(
+    async (force = false) => {
+      if (!wsClient || connectionState !== 'authenticated') return;
+
+      // Se não for forçado e sync for recente (< 1 hora), pula
+      const ONE_HOUR = 60 * 60 * 1000;
+      if (!force && lastSyncTimestamp && Date.now() - lastSyncTimestamp < ONE_HOUR) {
+        return;
+      }
+
+      try {
+        const response = await wsClient.send<{ tables: string[] }, Record<string, Product[]>>(
+          'sync.full',
+          {
+            tables: ['products'],
+          }
+        );
+
+        if (response.success && response.data?.products) {
+          setProducts(response.data.products);
+          setLastSyncTimestamp(Date.now());
+          console.info(`📦 Cache de produtos atualizado: ${response.data.products.length} itens`);
+        }
+      } catch (error) {
+        console.error('Erro ao sincronizar produtos:', error);
+      }
+    },
+    [connectionState, lastSyncTimestamp, setProducts, setLastSyncTimestamp]
+  );
+
   const login = useCallback(
     async (pin: string): Promise<AuthLoginResponse> => {
       if (!wsClient) {
@@ -320,36 +350,6 @@ export function useWebSocket(): UseWebSocketResult {
       return wsClient.send<TPayload, TResponse>(action, payload);
     },
     []
-  );
-
-  const syncProducts = useCallback(
-    async (force = false) => {
-      if (!wsClient || connectionState !== 'authenticated') return;
-
-      // Se não for forçado e sync for recente (< 1 hora), pula
-      const ONE_HOUR = 60 * 60 * 1000;
-      if (!force && lastSyncTimestamp && Date.now() - lastSyncTimestamp < ONE_HOUR) {
-        return;
-      }
-
-      try {
-        const response = await wsClient.send<{ tables: string[] }, Record<string, Product[]>>(
-          'sync.full',
-          {
-            tables: ['products'],
-          }
-        );
-
-        if (response.success && response.data?.products) {
-          setProducts(response.data.products);
-          setLastSyncTimestamp(Date.now());
-          console.info(`📦 Cache de produtos atualizado: ${response.data.products.length} itens`);
-        }
-      } catch (error) {
-        console.error('Erro ao sincronizar produtos:', error);
-      }
-    },
-    [connectionState, lastSyncTimestamp, setProducts, setLastSyncTimestamp]
   );
 
   const onEvent = useCallback(

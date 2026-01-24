@@ -3,6 +3,7 @@
  */
 
 import { cn } from '@lib/utils';
+import { useHaptics } from '@hooks/useHaptics';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
 
@@ -23,7 +24,11 @@ interface Toast {
 }
 
 interface ToastContextValue {
-  showToast: (messageOrOptions: string | ShowToastOptions, type?: ToastType, duration?: number) => void;
+  showToast: (
+    messageOrOptions: string | ShowToastOptions,
+    type?: ToastType,
+    duration?: number
+  ) => void;
   success: (message: string) => void;
   error: (message: string) => void;
   warning: (message: string) => void;
@@ -41,10 +46,34 @@ interface ToastItemProps {
 }
 
 function ToastItem({ toast, onDismiss }: ToastItemProps) {
+  const { notification, selection } = useHaptics();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-20)).current;
 
+  const dismiss = useCallback(() => {
+    selection();
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: -20,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onDismiss(toast.id);
+    });
+  }, [onDismiss, toast.id, opacity, translateY, selection]);
+
   useEffect(() => {
+    // Feedback tátil ao entrar
+    if (toast.type === 'success') notification('success');
+    if (toast.type === 'error') notification('error');
+    if (toast.type === 'warning') notification('warning');
+
     // Animação de entrada
     Animated.parallel([
       Animated.timing(opacity, {
@@ -65,24 +94,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     }, toast.duration || DEFAULT_DURATION);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  const dismiss = () => {
-    Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: -20,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onDismiss(toast.id);
-    });
-  };
+  }, [dismiss, toast.duration, toast.type, opacity, translateY, notification]);
 
   const icons = {
     success: '✓',
@@ -112,6 +124,9 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
           'flex-row items-center rounded-lg px-4 py-3 mx-4 mb-2 shadow-lg',
           styles[toast.type]
         )}
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={`${toast.type}: ${toast.message}`}
       >
         <Text className="text-white text-lg mr-2">{icons[toast.type]}</Text>
         <Text className="text-white flex-1">{toast.message}</Text>
@@ -128,15 +143,21 @@ interface ToastProviderProps {
 export function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((messageOrOptions: string | ShowToastOptions, type: ToastType = 'info', duration?: number) => {
-    const id = Date.now().toString();
-    if (typeof messageOrOptions === 'string') {
-      setToasts((prev) => [...prev, { id, message: messageOrOptions, type, duration }]);
-    } else {
-      const { message, type: optType, duration: optDuration } = messageOrOptions;
-      setToasts((prev) => [...prev, { id, message, type: optType || 'info', duration: optDuration }]);
-    }
-  }, []);
+  const showToast = useCallback(
+    (messageOrOptions: string | ShowToastOptions, type: ToastType = 'info', duration?: number) => {
+      const id = Date.now().toString();
+      if (typeof messageOrOptions === 'string') {
+        setToasts((prev) => [...prev, { id, message: messageOrOptions, type, duration }]);
+      } else {
+        const { message, type: optType, duration: optDuration } = messageOrOptions;
+        setToasts((prev) => [
+          ...prev,
+          { id, message, type: optType || 'info', duration: optDuration },
+        ]);
+      }
+    },
+    []
+  );
 
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));

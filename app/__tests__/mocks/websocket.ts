@@ -3,7 +3,7 @@
  * Mock implementation for testing WebSocket connections
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from './event-emitter';
 
 type MessageHandler = (data: unknown) => void;
 

@@ -15,6 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { FadeIn } from '@/components/ui/Animated';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { EmptyState, Loading } from '@/components/ui/Loading';
@@ -81,44 +82,46 @@ export function ServerFinder({
     const isLoading = isSelected && isConnecting;
 
     return (
-      <Pressable
-        onPress={() => onSelectServer(item)}
-        disabled={isConnecting}
-        className="mb-3 active:scale-[0.98]"
-      >
-        <Card
-          className={`border ${isHistory ? 'border-dashed' : ''} ${
-            isSelected ? 'border-primary' : 'border-border'
-          }`}
+      <FadeIn>
+        <Pressable
+          onPress={() => onSelectServer(item)}
+          disabled={isConnecting}
+          className="mb-3 active:scale-[0.98]"
         >
-          <CardContent className="flex-row items-center py-4">
-            <View
-              className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${
-                isHistory ? 'bg-muted' : 'bg-primary/10'
-              }`}
-            >
-              {isHistory ? (
-                <Clock size={24} className="text-muted-foreground" />
+          <Card
+            className={`border ${isHistory ? 'border-dashed' : ''} ${
+              isSelected ? 'border-primary' : 'border-border'
+            }`}
+          >
+            <CardContent className="flex-row items-center py-4">
+              <View
+                className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${
+                  isHistory ? 'bg-muted' : 'bg-primary/10'
+                }`}
+              >
+                {isHistory ? (
+                  <Clock size={24} className="text-muted-foreground" />
+                ) : (
+                  <Server size={24} className="text-primary" />
+                )}
+              </View>
+
+              <View className="flex-1">
+                <Text className="text-lg font-medium text-foreground">{item.name}</Text>
+                <Text className="text-sm text-muted-foreground">
+                  {item.ip}:{item.port}
+                </Text>
+              </View>
+
+              {isLoading ? (
+                <Loading size="small" />
               ) : (
-                <Server size={24} className="text-primary" />
+                <ChevronRight size={24} className="text-muted-foreground" />
               )}
-            </View>
-
-            <View className="flex-1">
-              <Text className="text-lg font-medium text-foreground">{item.name}</Text>
-              <Text className="text-sm text-muted-foreground">
-                {item.ip}:{item.port}
-              </Text>
-            </View>
-
-            {isLoading ? (
-              <Loading size="small" />
-            ) : (
-              <ChevronRight size={24} className="text-muted-foreground" />
-            )}
-          </CardContent>
-        </Card>
-      </Pressable>
+            </CardContent>
+          </Card>
+        </Pressable>
+      </FadeIn>
     );
   };
 
@@ -144,8 +147,8 @@ export function ServerFinder({
           {isSearching
             ? 'Procurando GIRO Desktop na rede...'
             : desktops.length > 0
-            ? `${desktops.length} desktop(s) encontrado(s)`
-            : 'Nenhum desktop encontrado'}
+              ? `${desktops.length} desktop(s) encontrado(s)`
+              : 'Nenhum desktop encontrado'}
         </Text>
       </View>
 
