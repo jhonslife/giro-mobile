@@ -23,6 +23,7 @@ export const STORAGE_KEYS = {
   SETTINGS: '@giro/settings',
   SCAN_HISTORY: '@giro/scan_history',
   LICENSE_DATA: '@giro/license_data',
+  PRODUCTS_CACHE: '@giro/products_cache',
 } as const;
 
 // Limites

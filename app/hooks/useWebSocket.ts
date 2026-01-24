@@ -50,6 +50,9 @@ interface UseWebSocketResult {
     payload: TPayload
   ) => Promise<WSResponse<TResponse>>;
 
+  // Sync
+  syncProducts: (force?: boolean) => Promise<void>;
+
   // Events
   onEvent: <T = unknown>(event: WSEventType, handler: (data: T) => void) => () => void;
 }
@@ -71,7 +74,14 @@ export function useWebSocket(): UseWebSocketResult {
     setLastError,
   } = useConnectionStore();
 
-  const { setProduct, updateProductStock } = useProductsStore();
+  const {
+    setProduct,
+    setProducts,
+    updateProductStock,
+    lastSyncTimestamp,
+    setLastSyncTimestamp,
+    getProductByBarcode,
+  } = useProductsStore();
 
   const isMountedRef = useRef(true);
 
@@ -185,9 +195,16 @@ export function useWebSocket(): UseWebSocketResult {
       wsClient.setToken(response.data.token);
       setConnectionState('authenticated');
 
+      // Iniciar sync em background após login
+      try {
+        await syncProducts();
+      } catch (e) {
+        console.warn('Falha no sync inicial de produtos:', e);
+      }
+
       return response.data;
     },
-    [deviceId, setToken, setOperator, setConnectionState]
+    [deviceId, setToken, setOperator, setConnectionState, syncProducts]
   );
 
   const logout = useCallback(async () => {
@@ -203,47 +220,70 @@ export function useWebSocket(): UseWebSocketResult {
 
   const getProduct = useCallback(
     async (barcode: string): Promise<Product | null> => {
-      if (!wsClient) {
-        throw new Error('Not connected');
+      // 1. Tentar cache local primeiro para resposta instantânea (opcional, dependendo da estratégia)
+      const cached = getProductByBarcode(barcode);
+
+      if (!wsClient || connectionState !== 'authenticated') {
+        return cached || null;
       }
 
-      const response = await wsClient.send<ProductGetPayload, Product>('product.get', { barcode });
+      try {
+        const response = await wsClient.send<ProductGetPayload, Product>('product.get', {
+          barcode,
+        });
 
-      if (response.success && response.data) {
-        setProduct(response.data);
-        return response.data;
+        if (response.success && response.data) {
+          setProduct(response.data);
+          return response.data;
+        }
+      } catch (error) {
+        console.warn('Falha ao buscar produto online, usando cache:', error);
       }
 
-      return null;
+      return cached || null;
     },
-    [setProduct]
+    [connectionState, getProductByBarcode, setProduct]
   );
 
   const searchProducts = useCallback(
     async (query: string, options?: Partial<ProductSearchPayload>): Promise<Product[]> => {
-      if (!wsClient) {
-        throw new Error('Not connected');
+      // Se offline ou não autenticado, busca apenas no cache local
+      if (!wsClient || connectionState !== 'authenticated') {
+        const allProducts = Object.values(useProductsStore.getState().products);
+        const q = query.toLowerCase();
+        return allProducts
+          .filter((p) => p.name.toLowerCase().includes(q) || p.barcode.includes(q))
+          .slice(0, options?.limit || 20);
       }
 
-      const payload: ProductSearchPayload = {
-        query,
-        limit: 20,
-        offset: 0,
-        ...options,
-      };
+      try {
+        const payload: ProductSearchPayload = {
+          query,
+          limit: 20,
+          offset: 0,
+          ...options,
+        };
 
-      const response = await wsClient.send<ProductSearchPayload, { products: Product[] }>(
-        'product.search',
-        payload
-      );
+        const response = await wsClient.send<ProductSearchPayload, { products: Product[] }>(
+          'product.search',
+          payload
+        );
 
-      if (response.success && response.data) {
-        return response.data.products;
+        if (response.success && response.data) {
+          return response.data.products;
+        }
+      } catch (error) {
+        console.warn('Erro na busca online, fallback para cache:', error);
+        const allProducts = Object.values(useProductsStore.getState().products);
+        const q = query.toLowerCase();
+        return allProducts
+          .filter((p) => p.name.toLowerCase().includes(q) || p.barcode.includes(q))
+          .slice(0, options?.limit || 20);
       }
 
       return [];
     },
-    []
+    [connectionState]
   );
 
   const adjustStock = useCallback(
@@ -282,6 +322,36 @@ export function useWebSocket(): UseWebSocketResult {
     []
   );
 
+  const syncProducts = useCallback(
+    async (force = false) => {
+      if (!wsClient || connectionState !== 'authenticated') return;
+
+      // Se não for forçado e sync for recente (< 1 hora), pula
+      const ONE_HOUR = 60 * 60 * 1000;
+      if (!force && lastSyncTimestamp && Date.now() - lastSyncTimestamp < ONE_HOUR) {
+        return;
+      }
+
+      try {
+        const response = await wsClient.send<{ tables: string[] }, Record<string, Product[]>>(
+          'sync.full',
+          {
+            tables: ['products'],
+          }
+        );
+
+        if (response.success && response.data?.products) {
+          setProducts(response.data.products);
+          setLastSyncTimestamp(Date.now());
+          console.info(`📦 Cache de produtos atualizado: ${response.data.products.length} itens`);
+        }
+      } catch (error) {
+        console.error('Erro ao sincronizar produtos:', error);
+      }
+    },
+    [connectionState, lastSyncTimestamp, setProducts, setLastSyncTimestamp]
+  );
+
   const onEvent = useCallback(
     <T = unknown>(event: WSEventType, handler: (data: T) => void): (() => void) => {
       if (!wsClient) {
@@ -316,6 +386,7 @@ export function useWebSocket(): UseWebSocketResult {
     searchProducts,
     adjustStock,
     send,
+    syncProducts,
     onEvent,
   };
 }

@@ -34,7 +34,7 @@ describe('productsStore', () => {
   describe('initial state', () => {
     it('should have empty products cache', () => {
       const state = useProductsStore.getState();
-      expect(state.products.size).toBe(0);
+      expect(Object.keys(state.products).length).toBe(0);
       expect(state.categories).toEqual([]);
       expect(state.recentScans).toEqual([]);
     });
@@ -49,8 +49,8 @@ describe('productsStore', () => {
       });
 
       const state = useProductsStore.getState();
-      expect(state.products.size).toBeGreaterThan(0);
-      expect(state.products.get(product.id)).toEqual(product);
+      expect(Object.keys(state.products).length).toBeGreaterThan(0);
+      expect(state.products[product.id]).toEqual(product);
     });
 
     it('should update existing product in cache', () => {
@@ -63,7 +63,7 @@ describe('productsStore', () => {
       });
 
       const state = useProductsStore.getState();
-      expect(state.products.get(product.id)?.name).toBe('Updated');
+      expect(state.products[product.id]?.name).toBe('Updated');
     });
   });
 
@@ -79,9 +79,9 @@ describe('productsStore', () => {
       });
 
       const state = useProductsStore.getState();
-      expect(state.products.size).toBeGreaterThan(0);
-      expect(state.products.get('1')?.name).toBe('Product 1');
-      expect(state.products.get('2')?.name).toBe('Product 2');
+      expect(Object.keys(state.products).length).toBeGreaterThan(0);
+      expect(state.products['1']?.name).toBe('Product 1');
+      expect(state.products['2']?.name).toBe('Product 2');
     });
   });
 
@@ -133,13 +133,13 @@ describe('productsStore', () => {
         useProductsStore.getState().setProduct(product);
       });
 
-      expect(useProductsStore.getState().products.get('to-remove')).toBeDefined();
+      expect(useProductsStore.getState().products['to-remove']).toBeDefined();
 
       act(() => {
         useProductsStore.getState().removeProduct('to-remove');
       });
 
-      expect(useProductsStore.getState().products.get('to-remove')).toBeUndefined();
+      expect(useProductsStore.getState().products['to-remove']).toBeUndefined();
     });
   });
 
@@ -152,7 +152,7 @@ describe('productsStore', () => {
         useProductsStore.getState().updateProductStock('prod-1', 50);
       });
 
-      const updated = useProductsStore.getState().products.get('prod-1');
+      const updated = useProductsStore.getState().products['prod-1'];
       expect(updated?.currentStock).toBe(50);
     });
   });
@@ -250,7 +250,7 @@ describe('productsStore', () => {
       });
 
       const state = useProductsStore.getState();
-      expect(state.products.size).toBe(0);
+      expect(Object.keys(state.products).length).toBe(0);
       expect(state.searchQuery).toBe('');
       expect(state.recentScans).toEqual([]);
     });

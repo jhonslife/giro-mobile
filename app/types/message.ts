@@ -66,7 +66,9 @@ export type WSActionType =
   | 'category.list'
   // System
   | 'system.ping'
-  | 'system.info';
+  | 'system.info'
+  // Sync
+  | 'sync.full';
 
 // ============================================
 // Events (Desktop → Mobile - Push)

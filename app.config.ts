@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: process.env.EXPO_PUBLIC_APP_VARIANT === 'production' ? 'GIRO Mobile' : 'GIRO Mobile (Dev)',
   slug: 'giro-mobile',
-  version: '0.1.0',
+  version: '1.1.6',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
