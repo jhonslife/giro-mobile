@@ -46,7 +46,7 @@ interface ToastItemProps {
 }
 
 function ToastItem({ toast, onDismiss }: ToastItemProps) {
-  const { notification, selection } = useHaptics();
+  const { trigger, selection } = useHaptics();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-20)).current;
 
@@ -70,9 +70,9 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
 
   useEffect(() => {
     // Feedback tátil ao entrar
-    if (toast.type === 'success') notification('success');
-    if (toast.type === 'error') notification('error');
-    if (toast.type === 'warning') notification('warning');
+    if (toast.type === 'success') trigger('success');
+    if (toast.type === 'error') trigger('error');
+    if (toast.type === 'warning') trigger('warning');
 
     // Animação de entrada
     Animated.parallel([
@@ -94,7 +94,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     }, toast.duration || DEFAULT_DURATION);
 
     return () => clearTimeout(timer);
-  }, [dismiss, toast.duration, toast.type, opacity, translateY, notification]);
+  }, [dismiss, toast.duration, toast.type, opacity, translateY, trigger]);
 
   const icons = {
     success: '✓',

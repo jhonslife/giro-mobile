@@ -90,11 +90,15 @@ export function Button({
   return (
     <Pressable
       className={cn(buttonVariants({ variant, size }), isDisabled && 'opacity-50', className)}
-      style={({ pressed }) => [
-        style,
-        pressed && variant !== 'ghost' && variant !== 'outline' && { opacity: 0.9 },
-        pressed && (variant === 'ghost' || variant === 'outline') && { opacity: 0.7 },
-      ]}
+      style={(state) => {
+        const { pressed } = state;
+        const userStyle = typeof style === 'function' ? style(state) : style;
+        return [
+          userStyle,
+          pressed && variant !== 'ghost' && variant !== 'outline' && { opacity: 0.9 },
+          pressed && (variant === 'ghost' || variant === 'outline') && { opacity: 0.7 },
+        ];
+      }}
       disabled={isDisabled}
       onPress={handlePress}
       android_ripple={{

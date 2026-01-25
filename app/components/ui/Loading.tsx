@@ -4,7 +4,7 @@
 
 import { cn } from '@lib/utils';
 import React from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, DimensionValue, Text, View } from 'react-native';
 
 interface LoadingProps {
   size?: 'small' | 'large';
