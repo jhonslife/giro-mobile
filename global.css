@@ -1,49 +1,202 @@
+/**
+ * 🎨 GIRO Mobile - Estilos Globais
+ * 
+ * Design System Unificado - Arkheion Corp
+ * @version 2.0.0
+ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles */
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎯 BASE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
 @layer base {
   * {
     border-color: theme('colors.border.DEFAULT');
   }
 }
 
-/* Component styles */
+/* ═══════════════════════════════════════════════════════════════════════════
+   📦 GIRO COMPONENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
+  /* ═══════════════════════════════════════════════════════════════════════════
+     🔘 BUTTONS
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .giro-btn {
+    @apply px-4 py-3 rounded-lg font-semibold items-center justify-center;
+  }
+
+  .giro-btn-primary {
+    @apply giro-btn bg-primary-500 text-white;
+  }
+
+  .giro-btn-secondary {
+    @apply giro-btn bg-background-secondary text-foreground border border-border;
+  }
+
+  .giro-btn-outline {
+    @apply giro-btn bg-transparent text-primary-500 border border-primary-500;
+  }
+
+  .giro-btn-ghost {
+    @apply giro-btn bg-transparent text-primary-500;
+  }
+
+  .giro-btn-destructive {
+    @apply giro-btn bg-error text-white;
+  }
+
+  .giro-btn-success {
+    @apply giro-btn bg-success text-white;
+  }
+
+  /* Legacy aliases */
   .btn-primary {
-    @apply bg-primary-500 text-white px-4 py-3 rounded-lg font-semibold;
+    @apply giro-btn-primary;
   }
 
   .btn-secondary {
-    @apply bg-background-secondary text-foreground px-4 py-3 rounded-lg font-semibold border border-border;
+    @apply giro-btn-secondary;
   }
 
   .btn-outline {
-    @apply bg-transparent text-primary-500 px-4 py-3 rounded-lg font-semibold border border-primary-500;
+    @apply giro-btn-outline;
   }
 
+  /* ═══════════════════════════════════════════════════════════════════════════
+     📦 CARDS
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .giro-card {
+    @apply bg-background rounded-xl shadow-sm border border-border;
+  }
+
+  .giro-card-padded {
+    @apply giro-card p-4;
+  }
+
+  .giro-card-interactive {
+    @apply giro-card active:opacity-80;
+  }
+
+  /* Legacy alias */
   .card {
-    @apply bg-background rounded-xl p-4 shadow-sm border border-border;
+    @apply giro-card-padded;
   }
 
-  .input {
+  /* ═══════════════════════════════════════════════════════════════════════════
+     📝 INPUTS
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .giro-input {
     @apply bg-background-secondary border border-border rounded-lg px-4 py-3 text-foreground;
   }
 
-  .badge {
+  .giro-input-error {
+    @apply giro-input border-error;
+  }
+
+  /* Legacy alias */
+  .input {
+    @apply giro-input;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     🏷️ BADGES
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .giro-badge {
     @apply px-2 py-1 rounded-full text-xs font-medium;
   }
 
+  .giro-badge-success {
+    @apply giro-badge bg-success/10 text-success;
+  }
+
+  .giro-badge-warning {
+    @apply giro-badge bg-warning/10 text-warning;
+  }
+
+  .giro-badge-error {
+    @apply giro-badge bg-error/10 text-error;
+  }
+
+  .giro-badge-info {
+    @apply giro-badge bg-info/10 text-info;
+  }
+
+  .giro-badge-primary {
+    @apply giro-badge bg-primary-500/10 text-primary-500;
+  }
+
+  /* Legacy aliases */
+  .badge {
+    @apply giro-badge;
+  }
+
   .badge-success {
-    @apply bg-success/10 text-success;
+    @apply giro-badge-success;
   }
 
   .badge-warning {
-    @apply bg-warning/10 text-warning;
+    @apply giro-badge-warning;
   }
 
   .badge-error {
-    @apply bg-error/10 text-error;
+    @apply giro-badge-error;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     💰 PRICE DISPLAY
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .giro-price {
+    @apply font-mono;
+  }
+
+  .giro-price-lg {
+    @apply giro-price text-2xl font-bold;
+  }
+
+  .giro-price-xl {
+    @apply giro-price text-3xl font-bold;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     📱 SAFE AREA
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .giro-safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .giro-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .giro-safe-horizontal {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     🏢 ENTERPRISE STATUS
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .giro-status-pending {
+    @apply giro-badge bg-yellow-100 text-yellow-800;
+  }
+
+  .giro-status-approved {
+    @apply giro-badge bg-green-100 text-green-800;
+  }
+
+  .giro-status-rejected {
+    @apply giro-badge bg-red-100 text-red-800;
+  }
+
+  .giro-status-delivered {
+    @apply giro-badge bg-blue-100 text-blue-800;
+  }
+
+  .giro-status-in-transit {
+    @apply giro-badge bg-purple-100 text-purple-800;
   }
 }
