@@ -68,7 +68,39 @@ export type WSActionType =
   | 'system.ping'
   | 'system.info'
   // Sync
-  | 'sync.full';
+  | 'sync.full'
+  // Enterprise - Material Requests
+  | 'enterprise.request.list'
+  | 'enterprise.request.get'
+  | 'enterprise.request.create'
+  | 'enterprise.request.update'
+  | 'enterprise.request.submit'
+  | 'enterprise.request.approve'
+  | 'enterprise.request.reject'
+  | 'enterprise.request.cancel'
+  | 'enterprise.request.add_item'
+  | 'enterprise.request.remove_item'
+  // Enterprise - Stock Transfers
+  | 'enterprise.transfer.list'
+  | 'enterprise.transfer.get'
+  | 'enterprise.transfer.create'
+  | 'enterprise.transfer.update'
+  | 'enterprise.transfer.ship'
+  | 'enterprise.transfer.receive'
+  | 'enterprise.transfer.cancel'
+  | 'enterprise.transfer.add_item'
+  | 'enterprise.transfer.remove_item'
+  // Enterprise - Context
+  | 'enterprise.context.get'
+  | 'enterprise.context.contracts'
+  | 'enterprise.context.locations'
+  // Enterprise - Inventory
+  | 'enterprise.inventory.locations'
+  | 'enterprise.inventory.start'
+  | 'enterprise.inventory.count'
+  | 'enterprise.inventory.sync'
+  | 'enterprise.inventory.finish'
+  | 'enterprise.inventory.cancel';
 
 // ============================================
 // Events (Desktop → Mobile - Push)
@@ -89,7 +121,16 @@ export type WSEventType =
   | 'inventory.progress'
   // System
   | 'system.shutdown'
-  | 'system.maintenance';
+  | 'system.maintenance'
+  // Enterprise events (Desktop → Mobile)
+  | 'enterprise.request.created'
+  | 'enterprise.request.updated'
+  | 'enterprise.request.approved'
+  | 'enterprise.request.rejected'
+  | 'enterprise.transfer.created'
+  | 'enterprise.transfer.updated'
+  | 'enterprise.transfer.shipped'
+  | 'enterprise.transfer.received';
 
 // ============================================
 // Error Codes
