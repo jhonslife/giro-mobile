@@ -374,18 +374,12 @@ export function EnterpriseScannerModal({
 
                 {/* Action Buttons */}
                 <View className="flex-row gap-3">
-                  <Button
-                    label="Escanear Outro"
-                    onPress={resetState}
-                    variant="outline"
-                    className="flex-1"
-                  />
-                  <Button
-                    label="Adicionar"
-                    onPress={handleAddItem}
-                    loading={isLoading}
-                    className="flex-1"
-                  />
+                  <Button onPress={resetState} variant="outline" className="flex-1">
+                    Escanear Outro
+                  </Button>
+                  <Button onPress={handleAddItem} isLoading={isLoading} className="flex-1">
+                    Adicionar
+                  </Button>
                 </View>
               </ScrollView>
             )}
@@ -455,18 +449,12 @@ export function EnterpriseScannerModal({
 
                   {/* Action Buttons */}
                   <View className="flex-row gap-3 mt-4">
-                    <Button
-                      label="Cancelar"
-                      onPress={handleClose}
-                      variant="outline"
-                      className="flex-1"
-                    />
-                    <Button
-                      label="Adicionar"
-                      onPress={handleAddItem}
-                      loading={isLoading}
-                      className="flex-1"
-                    />
+                    <Button onPress={handleClose} variant="outline" className="flex-1">
+                      Cancelar
+                    </Button>
+                    <Button onPress={handleAddItem} isLoading={isLoading} className="flex-1">
+                      Adicionar
+                    </Button>
                   </View>
                 </View>
               </ScrollView>

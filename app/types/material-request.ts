@@ -141,7 +141,7 @@ export interface RejectRequestInput {
  */
 export interface PendingRequestAction {
   id: string;
-  type: 'create' | 'add_item' | 'remove_item' | 'submit' | 'approve' | 'reject';
+  type: 'create' | 'add_item' | 'remove_item' | 'submit' | 'approve' | 'reject' | 'cancel';
   payload: unknown;
   createdAt: string;
   synced: boolean;

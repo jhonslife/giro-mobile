@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { render, waitFor, screen, fireEvent } from '@testing-library/react-native';
+import { render, screen, fireEvent } from '@testing-library/react-native';
 
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
@@ -63,7 +63,12 @@ jest.mock('lucide-react-native', () => ({
 // Mock BarcodeScanner
 jest.mock('@/components/scanner/BarcodeScanner', () => ({
   BarcodeScanner: ({ onScan }: { onScan: (code: string) => void }) => {
-    return <mock-scanner testID="barcode-scanner" onPress={() => onScan('7891234567890')} />;
+    const { View, Pressable } = require('react-native');
+    return (
+      <Pressable testID="barcode-scanner" onPress={() => onScan('7891234567890')}>
+        <View />
+      </Pressable>
+    );
   },
 }));
 

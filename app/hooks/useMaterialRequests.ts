@@ -62,6 +62,7 @@ interface UseMaterialRequestsResult {
   // Approval actions
   approveRequest: (input: ApproveRequestInput) => Promise<void>;
   rejectRequest: (input: RejectRequestInput) => Promise<void>;
+  cancelRequest: (requestId: string) => Promise<void>;
 
   // Offline actions
   syncPendingActions: () => Promise<void>;
@@ -451,6 +452,40 @@ export function useMaterialRequests(): UseMaterialRequestsResult {
     [isConnected, send, refreshRequests]
   );
 
+  // Cancel request
+  const cancelRequest = useCallback(
+    async (requestId: string) => {
+      if (!isConnected) {
+        await addPendingAction({
+          type: 'cancel',
+          payload: { requestId },
+        });
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await send<{ requestId: string }, {}>('enterprise.request.cancel', {
+          requestId,
+        });
+
+        if (response.success) {
+          await refreshRequests();
+        } else {
+          throw new Error(response.error?.message || 'Falha ao cancelar requisição');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isConnected, send, refreshRequests]
+  );
+
   // Add item by barcode (scan and add)
   const addItemByBarcode = useCallback(
     async (requestId: string, barcode: string, quantity: number) => {
@@ -504,6 +539,7 @@ export function useMaterialRequests(): UseMaterialRequestsResult {
           submit: 'enterprise.request.submit',
           approve: 'enterprise.request.approve',
           reject: 'enterprise.request.reject',
+          cancel: 'enterprise.request.cancel',
         };
 
         const actionName = actionNameMap[action.type];
@@ -572,6 +608,7 @@ export function useMaterialRequests(): UseMaterialRequestsResult {
     submitRequest,
     approveRequest,
     rejectRequest,
+    cancelRequest,
     syncPendingActions,
     clearPendingActions,
     addItemByBarcode,

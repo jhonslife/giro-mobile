@@ -161,7 +161,16 @@ const createMockRequest = (overrides: MockRequestOverrides = {}) => ({
   ...overrides,
 });
 
-const createMockItem = (overrides: Partial<MockRequestOverrides['items']> = {}) => ({
+interface MockRequestItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  notes?: string | null;
+}
+
+const createMockItem = (overrides: Partial<MockRequestItem> = {}): MockRequestItem => ({
   id: 'item-1',
   productId: 'prod-1',
   productName: 'Cimento CP-II',

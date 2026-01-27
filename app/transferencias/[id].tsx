@@ -5,7 +5,7 @@
  * despachar, receber e controlar divergências.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -26,9 +26,7 @@ import {
   Trash2,
   Truck,
   Check,
-  X,
   ArrowRight,
-  Clock,
   User,
   MapPin,
   Calendar,
@@ -45,10 +43,13 @@ import { Modal } from '@/components/ui/Modal';
 import { useStockTransfers } from '@/hooks/useStockTransfers';
 import { useEnterpriseContextStore } from '@/stores/enterpriseContextStore';
 import { useAuthStore } from '@/stores/authStore';
-import { StockTransfer, TransferStatus, TransferItem } from '@/types/stock-transfer';
+import type { TransferStatus } from '@/types/stock-transfer';
 
 const STATUS_LABELS: Record<TransferStatus, string> = {
   DRAFT: 'Rascunho',
+  PENDING: 'Pendente',
+  APPROVED: 'Aprovada',
+  REJECTED: 'Rejeitada',
   IN_TRANSIT: 'Em Trânsito',
   RECEIVED: 'Recebida',
   PARTIAL_RECEIVED: 'Recebida Parcialmente',
@@ -57,6 +58,9 @@ const STATUS_LABELS: Record<TransferStatus, string> = {
 
 const STATUS_COLORS: Record<TransferStatus, { bg: string; text: string; border: string }> = {
   DRAFT: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' },
+  PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
+  APPROVED: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
+  REJECTED: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' },
   IN_TRANSIT: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
   RECEIVED: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
   PARTIAL_RECEIVED: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
@@ -67,7 +71,7 @@ export default function TransferenciaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { activeContract, locations } = useEnterpriseContextStore();
+  const { activeContract, availableLocations } = useEnterpriseContextStore();
   const {
     currentTransfer: transfer,
     loadTransfer,
@@ -85,7 +89,6 @@ export default function TransferenciaDetailScreen() {
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [showSelectLocationModal, setShowSelectLocationModal] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [selectedDestination, setSelectedDestination] = useState('');
 
   // New item form state
   const [newItem, setNewItem] = useState({
@@ -114,7 +117,7 @@ export default function TransferenciaDetailScreen() {
         // Init with existing received quantity or 0
         // Or if in confirm mode, maybe default to shipped quantity?
         // Default to shipped quantity for easier receiving
-        initialReceive[item.id] = String(item.quantity);
+        initialReceive[item.id] = String(item.requestedQuantity);
       });
       setReceiveItems(initialReceive);
     }
@@ -134,14 +137,15 @@ export default function TransferenciaDetailScreen() {
   };
 
   // Permissions
-  const canEdit = transfer?.status === 'DRAFT' && transfer.createdById === user?.id;
+  const canEdit = transfer?.status === 'DRAFT' && transfer.requestedById === user?.id;
   const canShip =
-    transfer?.status === 'DRAFT' && (transfer.items?.length ?? 0) > 0 && !!transfer.toLocationId;
-  const canReceive =
-    transfer?.status === 'IN_TRANSIT' && transfer.toLocationId === user?.locationId; // User is at destination
+    transfer?.status === 'DRAFT' &&
+    (transfer.items?.length ?? 0) > 0 &&
+    !!transfer.destinationLocationId;
+  const canReceive = transfer?.status === 'IN_TRANSIT'; // Simplified - user at destination check removed
   const canCancel =
     ['DRAFT', 'IN_TRANSIT'].includes(transfer?.status || '') &&
-    (transfer?.createdById === user?.id || ['ADMIN', 'MANAGER'].includes(user?.role || ''));
+    (transfer?.requestedById === user?.id || ['ADMIN', 'MANAGER'].includes(user?.role || ''));
 
   // Toggle item expansion
   const toggleItemExpanded = (itemId: string) => {
@@ -249,7 +253,7 @@ export default function TransferenciaDetailScreen() {
     // Check for discrepancies
     const hasDiscrepancy = items.some((item) => {
       const originalItem = transfer.items?.find((i) => i.id === item.itemId);
-      return originalItem && item.receivedQuantity !== originalItem.quantity;
+      return originalItem && item.receivedQuantity !== originalItem.requestedQuantity;
     });
 
     const confirmMessage = hasDiscrepancy
@@ -302,7 +306,6 @@ export default function TransferenciaDetailScreen() {
 
   // Handle select destination
   const handleSelectDestination = async (locationId: string) => {
-    setSelectedDestination(locationId);
     setShowSelectLocationModal(false);
 
     if (transfer && transfer.status === 'DRAFT') {
@@ -334,7 +337,9 @@ export default function TransferenciaDetailScreen() {
   // Get location name
   const getLocationName = (locationId?: string) => {
     if (!locationId) return '-';
-    const location = locations.find((l) => l.id === locationId);
+    const location = (availableLocations || []).find(
+      (l: { id: string; name: string }) => l.id === locationId
+    );
     return location?.name || locationId;
   };
 
@@ -359,7 +364,9 @@ export default function TransferenciaDetailScreen() {
           <Text className="text-gray-600 text-lg font-medium text-center">
             Transferência não encontrada
           </Text>
-          <Button label="Voltar" onPress={() => router.back()} className="mt-6" />
+          <Button onPress={() => router.back()} className="mt-6">
+            Voltar
+          </Button>
         </View>
       </SafeAreaView>
     );
@@ -403,7 +410,7 @@ export default function TransferenciaDetailScreen() {
                 <View className="flex-row items-center">
                   <MapPin size={16} className="text-blue-600 mr-1" />
                   <Text className="font-medium text-gray-900" numberOfLines={2}>
-                    {transfer.fromLocationName || getLocationName(transfer.fromLocationId)}
+                    {transfer.sourceLocationName || getLocationName(transfer.sourceLocationId)}
                   </Text>
                 </View>
               </View>
@@ -416,10 +423,11 @@ export default function TransferenciaDetailScreen() {
               {/* Destination */}
               <View className="flex-1 items-end">
                 <Text className="text-xs text-gray-500 uppercase mb-1">Destino</Text>
-                {transfer.toLocationId ? (
+                {transfer.destinationLocationId ? (
                   <View className="flex-row items-center">
                     <Text className="font-medium text-gray-900 text-right" numberOfLines={2}>
-                      {transfer.toLocationName || getLocationName(transfer.toLocationId)}
+                      {transfer.destinationLocationName ||
+                        getLocationName(transfer.destinationLocationId)}
                     </Text>
                     <MapPin size={16} className="text-green-600 ml-1" />
                   </View>
@@ -440,7 +448,7 @@ export default function TransferenciaDetailScreen() {
             <View className="flex-row flex-wrap gap-4 mt-4 pt-4 border-t border-gray-100">
               <View className="flex-row items-center">
                 <User size={16} className="text-gray-400 mr-1" />
-                <Text className="text-sm text-gray-600">{transfer.createdByName}</Text>
+                <Text className="text-sm text-gray-600">{transfer.requestedByName}</Text>
               </View>
               <View className="flex-row items-center">
                 <Calendar size={16} className="text-gray-400 mr-1" />
@@ -504,7 +512,8 @@ export default function TransferenciaDetailScreen() {
               <View className="gap-2">
                 {transfer.items.map((item) => {
                   const hasDiscrepancy =
-                    item.receivedQuantity !== undefined && item.receivedQuantity !== item.quantity;
+                    item.receivedQuantity !== undefined &&
+                    item.receivedQuantity !== item.requestedQuantity;
 
                   return (
                     <View key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
@@ -518,7 +527,7 @@ export default function TransferenciaDetailScreen() {
                               </Text>
                               <View className="flex-row items-center">
                                 <Text className="text-sm text-gray-500">
-                                  {item.quantity} {item.unit}
+                                  {item.requestedQuantity} {item.unit}
                                 </Text>
                                 {hasDiscrepancy && (
                                   <View className="flex-row items-center ml-2">
@@ -543,7 +552,7 @@ export default function TransferenciaDetailScreen() {
                             {/* Status indicator for received items */}
                             {transfer.status === 'RECEIVED' ||
                             transfer.status === 'PARTIAL_RECEIVED' ? (
-                              item.receivedQuantity === item.quantity ? (
+                              item.receivedQuantity === item.requestedQuantity ? (
                                 <CheckCircle size={20} className="text-green-500" />
                               ) : item.receivedQuantity !== undefined &&
                                 item.receivedQuantity > 0 ? (
@@ -563,10 +572,10 @@ export default function TransferenciaDetailScreen() {
                       {/* Expanded content */}
                       {expandedItems.has(item.id) && (
                         <View className="px-4 pb-4 pt-2 border-t border-gray-100">
-                          {item.barcode && (
+                          {item.productBarcode && (
                             <View className="flex-row items-center mb-2">
                               <Barcode size={14} className="text-gray-400 mr-2" />
-                              <Text className="text-sm text-gray-600">{item.barcode}</Text>
+                              <Text className="text-sm text-gray-600">{item.productBarcode}</Text>
                             </View>
                           )}
                           {item.lotNumber && (
@@ -590,11 +599,12 @@ export default function TransferenciaDetailScreen() {
                 <Text className="text-gray-500 text-center">Nenhum item adicionado ainda</Text>
                 {canEdit && (
                   <Button
-                    label="Adicionar Primeiro Item"
                     onPress={() => setShowAddItemModal(true)}
                     className="mt-4"
                     variant="outline"
-                  />
+                  >
+                    Adicionar Primeiro Item
+                  </Button>
                 )}
               </View>
             )}
@@ -606,31 +616,30 @@ export default function TransferenciaDetailScreen() {
           <View className="flex-row gap-3">
             {canShip && (
               <Button
-                label="Despachar"
                 onPress={handleShip}
-                loading={isLoading}
-                icon={<Truck size={18} color="white" />}
+                isLoading={isLoading}
+                leftIcon={<Truck size={18} color="white" />}
                 className="flex-1"
-              />
+              >
+                Despachar
+              </Button>
             )}
 
             {canReceive && (
               <Button
-                label="Receber"
                 onPress={() => setShowReceiveModal(true)}
-                loading={isLoading}
-                icon={<Check size={18} color="white" />}
+                isLoading={isLoading}
+                leftIcon={<Check size={18} color="white" />}
                 className="flex-1 bg-green-600"
-              />
+              >
+                Receber
+              </Button>
             )}
 
             {canCancel && !canShip && !canReceive && (
-              <Button
-                label="Cancelar Transferência"
-                onPress={handleCancel}
-                variant="outline"
-                className="flex-1 border-red-300"
-              />
+              <Button onPress={handleCancel} variant="outline" className="flex-1 border-red-300">
+                Cancelar Transferência
+              </Button>
             )}
           </View>
         </View>
@@ -708,18 +717,12 @@ export default function TransferenciaDetailScreen() {
           </View>
 
           <View className="flex-row gap-3 mt-4">
-            <Button
-              label="Cancelar"
-              onPress={() => setShowAddItemModal(false)}
-              variant="outline"
-              className="flex-1"
-            />
-            <Button
-              label="Adicionar"
-              onPress={handleAddItem}
-              loading={isLoading}
-              className="flex-1"
-            />
+            <Button onPress={() => setShowAddItemModal(false)} variant="outline" className="flex-1">
+              Cancelar
+            </Button>
+            <Button onPress={handleAddItem} isLoading={isLoading} className="flex-1">
+              Adicionar
+            </Button>
           </View>
         </View>
       </Modal>
@@ -746,7 +749,7 @@ export default function TransferenciaDetailScreen() {
                     {item.productName}
                   </Text>
                   <Text className="text-sm text-gray-500">
-                    Enviado: {item.quantity} {item.unit}
+                    Enviado: {item.requestedQuantity} {item.unit}
                   </Text>
                 </View>
                 <View className="w-24">
@@ -765,18 +768,12 @@ export default function TransferenciaDetailScreen() {
           </ScrollView>
 
           <View className="flex-row gap-3 mt-4">
-            <Button
-              label="Cancelar"
-              onPress={() => setShowReceiveModal(false)}
-              variant="outline"
-              className="flex-1"
-            />
-            <Button
-              label="Confirmar Recebimento"
-              onPress={handleReceive}
-              loading={isLoading}
-              className="flex-1 bg-green-600"
-            />
+            <Button onPress={() => setShowReceiveModal(false)} variant="outline" className="flex-1">
+              Cancelar
+            </Button>
+            <Button onPress={handleReceive} isLoading={isLoading} className="flex-1 bg-green-600">
+              Confirmar Recebimento
+            </Button>
           </View>
         </View>
       </Modal>
@@ -789,8 +786,8 @@ export default function TransferenciaDetailScreen() {
       >
         <View className="gap-2">
           <ScrollView className="max-h-80">
-            {locations
-              .filter((loc) => loc.id !== transfer.fromLocationId)
+            {(availableLocations || [])
+              .filter((loc) => loc.id !== transfer.sourceLocationId)
               .map((location) => (
                 <Pressable
                   key={location.id}
@@ -809,11 +806,12 @@ export default function TransferenciaDetailScreen() {
           </ScrollView>
 
           <Button
-            label="Cancelar"
             onPress={() => setShowSelectLocationModal(false)}
             variant="outline"
             className="mt-4"
-          />
+          >
+            Cancelar
+          </Button>
         </View>
       </Modal>
     </SafeAreaView>

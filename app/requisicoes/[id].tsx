@@ -5,7 +5,7 @@
  * submissão para aprovação e ações de aprovação/rejeição para supervisores.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -94,7 +94,6 @@ export default function RequisicaoDetailScreen() {
     approveRequest,
     rejectRequest,
     cancelRequest,
-    isLoading: isHookLoading,
   } = useMaterialRequests();
 
   const [isLoadingRequest, setIsLoadingRequest] = useState(true);
@@ -168,9 +167,7 @@ export default function RequisicaoDetailScreen() {
     try {
       await addItem(request.id, {
         productId: newItem.productId,
-        productName: newItem.productName,
         quantity: parseFloat(newItem.quantity),
-        unit: newItem.unit,
         notes: newItem.notes || undefined,
       });
       setShowAddItemModal(false);
@@ -334,7 +331,9 @@ export default function RequisicaoDetailScreen() {
           <Text className="text-gray-600 text-lg font-medium text-center">
             Requisição não encontrada
           </Text>
-          <Button label="Voltar" onPress={() => router.back()} className="mt-6" />
+          <Button onPress={() => router.back()} className="mt-6">
+            Voltar
+          </Button>
         </View>
       </SafeAreaView>
     );
@@ -428,10 +427,11 @@ export default function RequisicaoDetailScreen() {
               <Button
                 variant="outline"
                 size="sm"
-                icon={<Plus size={16} />}
-                label="Adicionar"
+                leftIcon={<Plus size={16} />}
                 onPress={() => setShowAddItemModal(true)}
-              />
+              >
+                Adicionar
+              </Button>
             )}
           </View>
 
@@ -440,11 +440,9 @@ export default function RequisicaoDetailScreen() {
               <Package size={48} className="text-gray-300 mb-4" />
               <Text className="text-gray-500 text-center">Nenhum item na requisição</Text>
               {canEdit && (
-                <Button
-                  label="Adicionar Primeiro Item"
-                  onPress={() => setShowAddItemModal(true)}
-                  className="mt-4"
-                />
+                <Button onPress={() => setShowAddItemModal(true)} className="mt-4">
+                  Adicionar Primeiro Item
+                </Button>
               )}
             </View>
           ) : (
@@ -463,7 +461,7 @@ export default function RequisicaoDetailScreen() {
                       <View className="flex-row items-center mt-1">
                         <View className="bg-gray-100 px-2 py-0.5 rounded mr-2">
                           <Text className="text-xs text-gray-600 font-medium">
-                            {item.quantity} {item.unit}
+                            {item.requestedQuantity} {item.unit}
                           </Text>
                         </View>
                         {item.notes && (
@@ -504,11 +502,12 @@ export default function RequisicaoDetailScreen() {
                           <View className="flex-row justify-end mt-4 pt-2 border-t border-gray-100">
                             <Button
                               variant="ghost"
-                              label="Remover"
-                              icon={<Trash2 size={16} />}
+                              leftIcon={<Trash2 size={16} />}
                               className="text-red-600"
                               onPress={() => handleRemoveItem(item.id)}
-                            />
+                            >
+                              Remover
+                            </Button>
                           </View>
                         )}
                       </View>
@@ -526,54 +525,55 @@ export default function RequisicaoDetailScreen() {
         <View className="flex-row gap-3">
           {canSubmit && (
             <Button
-              label="Enviar para Aprovação"
-              icon={<Send size={20} color="white" />}
+              leftIcon={<Send size={20} color="white" />}
               className="flex-1"
               onPress={handleSubmit}
-            />
+            >
+              Enviar para Aprovação
+            </Button>
           )}
 
           {canApprove && (
             <>
               <Button
                 variant="outline"
-                label="Rejeitar"
-                icon={<X size={20} />}
+                leftIcon={<X size={20} />}
                 className="flex-1 border-red-200 text-red-700"
                 onPress={() => setShowRejectModal(true)}
-              />
+              >
+                Rejeitar
+              </Button>
               <Button
-                label="Aprovar"
-                icon={<Check size={20} color="white" />}
+                leftIcon={<Check size={20} color="white" />}
                 className="flex-1 bg-green-600"
                 onPress={handleApprove}
-              />
+              >
+                Aprovar
+              </Button>
             </>
           )}
 
           {canCancel && (
             <Button
               variant="outline"
-              label="Cancelar Requisição"
               className="flex-1 border-red-200 text-red-600"
               onPress={handleCancel}
-            />
+            >
+              Cancelar Requisição
+            </Button>
           )}
 
           {!canSubmit && !canApprove && !canCancel && (
-            <Button
-              variant="outline"
-              label="Voltar"
-              onPress={() => router.back()}
-              className="flex-1"
-            />
+            <Button variant="outline" onPress={() => router.back()} className="flex-1">
+              Voltar
+            </Button>
           )}
         </View>
       </View>
 
       {/* Add Item Modal */}
       <Modal
-        isOpen={showAddItemModal}
+        visible={showAddItemModal}
         onClose={() => setShowAddItemModal(false)}
         title="Adicionar Item"
       >
@@ -642,13 +642,15 @@ export default function RequisicaoDetailScreen() {
             />
           </View>
 
-          <Button label="Adicionar Item" onPress={handleAddItem} className="mt-4" />
+          <Button onPress={handleAddItem} className="mt-4">
+            Adicionar Item
+          </Button>
         </View>
       </Modal>
 
       {/* Reject Modal */}
       <Modal
-        isOpen={showRejectModal}
+        visible={showRejectModal}
         onClose={() => setShowRejectModal(false)}
         title="Rejeitar Requisição"
       >
@@ -672,24 +674,19 @@ export default function RequisicaoDetailScreen() {
           </View>
 
           <View className="flex-row gap-3 mt-2">
-            <Button
-              variant="outline"
-              label="Cancelar"
-              onPress={() => setShowRejectModal(false)}
-              className="flex-1"
-            />
-            <Button
-              label="Confirmar Rejeição"
-              onPress={handleReject}
-              className="flex-1 bg-red-600"
-            />
+            <Button variant="outline" onPress={() => setShowRejectModal(false)} className="flex-1">
+              Cancelar
+            </Button>
+            <Button onPress={handleReject} className="flex-1 bg-red-600">
+              Confirmar Rejeição
+            </Button>
           </View>
         </View>
       </Modal>
 
       {/* Scanner Modal */}
       <Modal
-        isOpen={showScannerModal}
+        visible={showScannerModal}
         onClose={() => setShowScannerModal(false)}
         title="Escanear Código de Barras"
       >
@@ -700,12 +697,9 @@ export default function RequisicaoDetailScreen() {
             showFlashButton
           />
         </View>
-        <Button
-          variant="outline"
-          label="Cancelar"
-          onPress={() => setShowScannerModal(false)}
-          className="mt-4"
-        />
+        <Button variant="outline" onPress={() => setShowScannerModal(false)} className="mt-4">
+          Cancelar
+        </Button>
       </Modal>
     </SafeAreaView>
   );

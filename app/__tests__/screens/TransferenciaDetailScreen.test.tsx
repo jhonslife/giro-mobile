@@ -93,6 +93,10 @@ jest.mock('@/stores/enterpriseContextStore', () => ({
       { id: 'loc-1', name: 'Almoxarifado Central' },
       { id: 'loc-2', name: 'Obra Frente A' },
     ],
+    availableLocations: [
+      { id: 'loc-1', name: 'Almoxarifado Central' },
+      { id: 'loc-2', name: 'Obra Frente A' },
+    ],
   }),
 }));
 
@@ -119,10 +123,10 @@ interface MockTransferOverrides {
   id?: string;
   transferNumber?: string;
   status?: 'DRAFT' | 'IN_TRANSIT' | 'RECEIVED' | 'PARTIAL_RECEIVED' | 'CANCELLED';
-  fromLocationId?: string;
-  fromLocationName?: string;
-  toLocationId?: string;
-  toLocationName?: string;
+  sourceLocationId?: string;
+  sourceLocationName?: string;
+  destinationLocationId?: string;
+  destinationLocationName?: string;
   createdById?: string;
   createdByName?: string;
   createdAt?: string;
@@ -133,7 +137,7 @@ interface MockTransferOverrides {
     id: string;
     productId: string;
     productName: string;
-    quantity: number;
+    requestedQuantity: number;
     receivedQuantity?: number;
     unit: string;
     lotNumber?: string;
@@ -145,10 +149,10 @@ const createMockTransfer = (overrides: MockTransferOverrides = {}) => ({
   id: 'trf-123',
   transferNumber: 'TRF-ALM01-OBR01-0001',
   status: 'DRAFT' as const,
-  fromLocationId: 'loc-1',
-  fromLocationName: 'Almoxarifado Central',
-  toLocationId: 'loc-2',
-  toLocationName: 'Obra Frente A',
+  sourceLocationId: 'loc-1',
+  sourceLocationName: 'Almoxarifado Central',
+  destinationLocationId: 'loc-2',
+  destinationLocationName: 'Obra Frente A',
   createdById: 'emp-123',
   createdByName: 'João Silva',
   createdAt: '2026-01-20T10:00:00Z',
@@ -157,11 +161,22 @@ const createMockTransfer = (overrides: MockTransferOverrides = {}) => ({
   ...overrides,
 });
 
-const createMockItem = (overrides: Partial<MockTransferOverrides['items']> = {}) => ({
+interface MockTransferItem {
+  id: string;
+  productId: string;
+  productName: string;
+  requestedQuantity: number;
+  receivedQuantity?: number;
+  unit: string;
+  lotNumber?: string;
+  notes?: string | null;
+}
+
+const createMockItem = (overrides: Partial<MockTransferItem> = {}): MockTransferItem => ({
   id: 'item-1',
   productId: 'prod-1',
   productName: 'Cimento CP-II',
-  quantity: 50,
+  requestedQuantity: 50,
   unit: 'SC',
   lotNumber: 'LOT-001',
   notes: null,
@@ -303,7 +318,7 @@ describe('TransferenciaDetailScreen', () => {
 
     it('should display item quantity', async () => {
       mockHookState.currentTransfer = createMockTransfer({
-        items: [createMockItem({ quantity: 100, unit: 'UN' })],
+        items: [createMockItem({ requestedQuantity: 100, unit: 'UN' })],
       });
 
       render(<TransferenciaDetailScreen />);
