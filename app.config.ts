@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: process.env.EXPO_PUBLIC_APP_VARIANT === 'production' ? 'GIRO Mobile' : 'GIRO Mobile (Dev)',
   slug: 'giro-mobile',
-  version: '1.1.6',
+  version: '1.2.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
@@ -45,6 +45,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 
   plugins: [
     'expo-router',
+    './plugins/withExpoModulesGradlePlugin.cjs',
     [
       'expo-camera',
       {
