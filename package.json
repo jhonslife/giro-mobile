@@ -16,12 +16,15 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
-    "prebuild": "expo prebuild",
+    "prebuild": "expo prebuild --clean",
+    "prebuild:android": "expo prebuild --platform android --clean",
     "build:dev": "eas build --platform android --profile development",
     "build:preview": "eas build --platform android --profile preview",
     "build:prod": "eas build --platform android --profile production",
     "build:android": "eas build --platform android",
     "build:android:preview": "eas build --platform android --profile preview",
+    "eas-build-pre-install": "echo 'EAS Pre-install hook'",
+    "eas-build-post-install": "npx expo prebuild --platform android --no-install",
     "postinstall": "node ./scripts/create-worklets-stub.cjs"
   },
   "dependencies": {
