@@ -37,7 +37,9 @@ export type ProductUnit =
   | 'CM' // Centímetro
   | 'CX' // Caixa
   | 'PCT' // Pacote
-  | 'DZ'; // Dúzia
+  | 'DZ' // Dúzia
+  | 'KIT' // Kit
+  | 'PAR'; // Par
 
 export interface ProductLot {
   id: string;

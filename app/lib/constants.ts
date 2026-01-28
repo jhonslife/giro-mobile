@@ -86,6 +86,8 @@ export const PRODUCT_UNITS = [
   { value: 'CX', label: 'Caixa' },
   { value: 'PCT', label: 'Pacote' },
   { value: 'DZ', label: 'Dúzia' },
+  { value: 'KIT', label: 'Kit' },
+  { value: 'PAR', label: 'Par' },
 ] as const;
 
 // Motivos de ajuste de estoque

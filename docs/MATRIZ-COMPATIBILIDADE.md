@@ -308,6 +308,8 @@ function mapDesktopUnitToMobile(desktopUnit: string): ProductUnit {
     BOX: 'CX',
     PACK: 'PCT',
     DOZEN: 'DZ',
+    KIT: 'KIT',
+    PAIR: 'PAR',
   };
   return mapping[desktopUnit] || 'UN';
 }
