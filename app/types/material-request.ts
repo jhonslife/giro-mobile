@@ -141,7 +141,15 @@ export interface RejectRequestInput {
  */
 export interface PendingRequestAction {
   id: string;
-  type: 'create' | 'add_item' | 'remove_item' | 'submit' | 'approve' | 'reject' | 'cancel';
+  type:
+    | 'create'
+    | 'add_item'
+    | 'remove_item'
+    | 'submit'
+    | 'approve'
+    | 'reject'
+    | 'cancel'
+    | 'deliver';
   payload: unknown;
   createdAt: string;
   synced: boolean;
@@ -216,3 +224,10 @@ export interface RejectRequestPayload {
   requestId: string;
   reason: string;
 }
+
+export interface DeliverRequestPayload {
+  requestId: string;
+  signature?: string;
+}
+
+export type DeliverRequestInput = DeliverRequestPayload;

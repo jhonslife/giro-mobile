@@ -80,6 +80,7 @@ export type WSActionType =
   | 'enterprise.request.cancel'
   | 'enterprise.request.add_item'
   | 'enterprise.request.remove_item'
+  | 'enterprise.request.deliver'
   // Enterprise - Stock Transfers
   | 'enterprise.transfer.list'
   | 'enterprise.transfer.get'

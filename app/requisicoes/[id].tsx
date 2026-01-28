@@ -34,10 +34,12 @@ import {
   Barcode,
   ChevronDown,
   ChevronUp,
+  Truck,
 } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { SignatureModal } from '@/components/ui/SignatureModal';
 import { BarcodeScanner } from '@/components/scanner';
 import { useMaterialRequests } from '@/hooks/useMaterialRequests';
 import { useEnterpriseContextStore } from '@/stores/enterpriseContextStore';
@@ -94,12 +96,14 @@ export default function RequisicaoDetailScreen() {
     approveRequest,
     rejectRequest,
     cancelRequest,
+    deliverRequest,
   } = useMaterialRequests();
 
   const [isLoadingRequest, setIsLoadingRequest] = useState(true);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showScannerModal, setShowScannerModal] = useState(false);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
@@ -143,6 +147,10 @@ export default function RequisicaoDetailScreen() {
   const canCancel =
     ['DRAFT', 'PENDING'].includes(request?.status || '') &&
     (request?.requesterId === user?.id || ['ADMIN', 'MANAGER'].includes(user?.role || ''));
+
+  const canDeliver =
+    ['SEPARATING', 'READY'].includes(request?.status || '') &&
+    ['ADMIN', 'MANAGER', 'ALMOXARIFE', 'ALMOXARIFE_SENIOR'].includes(user?.role || '');
 
   // Toggle item expansion
   const toggleItemExpanded = (itemId: string) => {
@@ -296,6 +304,19 @@ export default function RequisicaoDetailScreen() {
     setShowScannerModal(false);
     setNewItem((prev) => ({ ...prev, barcode, productName: `Produto: ${barcode}` }));
     setShowAddItemModal(true);
+  };
+
+  // Handle signature confirm
+  const handleSignatureConfirm = async (signature: string) => {
+    if (!request) return;
+
+    try {
+      await deliverRequest({ requestId: request.id, signature });
+      setShowSignatureModal(false);
+      Alert.alert('Sucesso', 'Material entregue com sucesso');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível registrar a entrega');
+    }
   };
 
   // Format date
@@ -553,6 +574,16 @@ export default function RequisicaoDetailScreen() {
             </>
           )}
 
+          {canDeliver && (
+            <Button
+              leftIcon={<Truck size={20} color="white" />}
+              className="flex-1 bg-blue-600"
+              onPress={() => setShowSignatureModal(true)}
+            >
+              Registrar Entrega
+            </Button>
+          )}
+
           {canCancel && (
             <Button
               variant="outline"
@@ -563,7 +594,7 @@ export default function RequisicaoDetailScreen() {
             </Button>
           )}
 
-          {!canSubmit && !canApprove && !canCancel && (
+          {!canSubmit && !canApprove && !canCancel && !canDeliver && (
             <Button variant="outline" onPress={() => router.back()} className="flex-1">
               Voltar
             </Button>
@@ -701,6 +732,13 @@ export default function RequisicaoDetailScreen() {
           Cancelar
         </Button>
       </Modal>
+
+      {/* Signature Modal */}
+      <SignatureModal
+        visible={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        onConfirm={handleSignatureConfirm}
+      />
     </SafeAreaView>
   );
 }

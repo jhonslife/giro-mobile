@@ -16,6 +16,7 @@ import type {
   AddRequestItemInput,
   ApproveRequestInput,
   RejectRequestInput,
+  DeliverRequestInput,
   PendingRequestAction,
   RequestListPayload,
   RequestListResponse,
@@ -27,6 +28,7 @@ import type {
   SubmitRequestPayload,
   ApproveRequestPayload,
   RejectRequestPayload,
+  DeliverRequestPayload,
 } from '@/types/material-request';
 
 const PENDING_ACTIONS_KEY = '@giro/enterprise_pending_request_actions';
@@ -63,6 +65,7 @@ interface UseMaterialRequestsResult {
   approveRequest: (input: ApproveRequestInput) => Promise<void>;
   rejectRequest: (input: RejectRequestInput) => Promise<void>;
   cancelRequest: (requestId: string) => Promise<void>;
+  deliverRequest: (input: DeliverRequestInput) => Promise<void>;
 
   // Offline actions
   syncPendingActions: () => Promise<void>;
@@ -486,6 +489,37 @@ export function useMaterialRequests(): UseMaterialRequestsResult {
     [isConnected, send, refreshRequests]
   );
 
+  // Deliver request
+  const deliverRequest = useCallback(
+    async (input: DeliverRequestInput) => {
+      if (!isConnected) {
+        await addPendingAction({
+          type: 'deliver',
+          payload: input,
+        });
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await send<DeliverRequestPayload, {}>('enterprise.request.deliver', input);
+
+        if (response.success) {
+          await refreshRequests();
+        } else {
+          throw new Error(response.error?.message || 'Falha ao entregar requisição');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isConnected, send, refreshRequests]
+  );
+
   // Add item by barcode (scan and add)
   const addItemByBarcode = useCallback(
     async (requestId: string, barcode: string, quantity: number) => {
@@ -540,6 +574,7 @@ export function useMaterialRequests(): UseMaterialRequestsResult {
           approve: 'enterprise.request.approve',
           reject: 'enterprise.request.reject',
           cancel: 'enterprise.request.cancel',
+          deliver: 'enterprise.request.deliver',
         };
 
         const actionName = actionNameMap[action.type];
@@ -609,6 +644,7 @@ export function useMaterialRequests(): UseMaterialRequestsResult {
     approveRequest,
     rejectRequest,
     cancelRequest,
+    deliverRequest,
     syncPendingActions,
     clearPendingActions,
     addItemByBarcode,
